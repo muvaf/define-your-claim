@@ -1,0 +1,21 @@
+# The namespaced MySQLInstance's schema is unchanged in the static provisioning
+# scenario.
+apiVersion: database.example.org/v1alpha1
+kind: MySQLInstance
+metadata:
+  namespace: default
+  name: sql
+spec:
+  engineVersion: "5.7"
+  storageGB: 10
+  region: us-west
+  writeConnectionSecretToRef:
+    name: sql
+  # Instead of referencing a composition this MySQLInstance explicitly specifies
+  # that it composes an existing managed resource (which is itself a composite).
+  # This is allowed as long as the specified SecureDatabase has no compositeRef.
+  composed:
+    - ref:
+        apiVersion: azure.example.org/v1alpha1
+        kind: SecureDatabase
+        name: my-secure-database

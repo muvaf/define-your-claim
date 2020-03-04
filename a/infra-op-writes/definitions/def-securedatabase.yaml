@@ -1,0 +1,56 @@
+# A cluster scoped "SecureDatabase" composite managed resource.
+apiVersion: crossplane.io/v1alpha1
+kind: ResourceDefinition
+metadata:
+  name: securedatabases.azure.example.org
+spec:
+  features:
+    - composite.crossplane.io
+    - connectable.crossplane.io
+  crdRef:
+    name: securedatabases.azure.example.org
+  crdSpecTemplate:
+    group: azure.example.org
+    version: v1alpha1
+    names:
+      kind: SecureDatabase
+      listKind: SecureDatabaseList
+      plural: securedatabases
+      singular: securedatabase
+    scope: Cluster
+    validation:
+      openAPIV3Schema:
+        properties:
+          administratorLogin:
+            type: string
+          location:
+            type: string
+          sslEnforcement:
+            type: string
+          version:
+            type: string
+          sku:
+            properties:
+              tier:
+                type: string
+              capacity:
+                type: integer
+              family:
+                type: string
+            type: object
+          storageProfile:
+            properties:
+              storageMB:
+                type: integer
+            type: object
+          virtualNetworkSubnetIdRef:
+            properties:
+              name:
+                type: string
+            type: object
+          providerRef:
+            properties:
+              name:
+                type: string
+            type: object
+        type: object

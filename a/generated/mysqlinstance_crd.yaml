@@ -1,0 +1,49 @@
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  creationTimestamp: null
+  name: mysqlclaims.database.example.org
+spec:
+  group: database.example.org
+  names:
+    kind: MySQLClaim
+    listKind: MySQLClaimList
+    plural: mysqlclaims
+    singular: mysqlclaim
+  scope: Namespace
+  subresources:
+    status: {}
+  version: v1alpha1
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+  validation:
+    openAPIV3Schema:
+      properties:
+        apiVersion:
+          type: string
+        kind:
+          type: string
+        metadata:
+          type: object
+        spec:
+          properties:
+            engineVersion:
+              enum:
+                - "5.6"
+                - "5.7"
+              type: string
+            storageGb:
+              type: integer
+            region:
+              type: string
+          type: object
+      type: object
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

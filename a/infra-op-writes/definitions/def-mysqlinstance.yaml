@@ -1,0 +1,59 @@
+# A (Crossplane) ResourceDefinition defines a new kind of Crossplane resource. A
+# controller watches for this kind and creates CustomResourceDefinitions. This
+# type allows us to simplify the CRD authorship process, removing footguns (like
+# not enabling the status subresource), and injecting schema to allow Crossplane
+# machinery.
+apiVersion: crossplane.io/v1alpha1
+kind: ResourceDefinition
+metadata:
+  name: mysqlinstances.database.example.org
+spec:
+  # Features of this Crossplane resource. A feature flags this kind of resource
+  # as having support for a particular feature. This may involve injecting the
+  # schema required to support that feature into the resource's CRD.
+  #
+  # - This resource is a composite; it should have composition machinery.
+  # - This resource is connectable; it should have connection secret machinery.
+  # - This resource is an OAM workload; we should publish a WorkloadDefinition.
+  features:
+    - composite.crossplane.io
+    - connectable.crossplane.io
+    - workload.crossplane.io
+  # The CRD associated with this ResourceDefinition. The ResourceDefinition
+  # author may specify an existing CRD. If they do not a CRD will be created and
+  # set for them.
+  crdRef:
+    name: mysqlinstances.database.example.org
+  # This template is used to create a CRD (if crdRef is unset). Only a single
+  # version is supported.
+  crdSpecTemplate:
+    group: database.example.org
+    version: v1alpha1
+    names:
+      kind: MySQLInstance
+      listKind: MySQLInstanceList
+      plural: mysqlinstances
+      singular: mysqlinstance
+    scope: Namespaced
+    validation:
+      openAPIV3Schema:
+        properties:
+          apiVersion:
+            type: string
+          kind:
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              engineVersion:
+                enum:
+                  - "5.6"
+                  - "5.7"
+                type: string
+              storageGb:
+                type: integer
+              region:
+                type: string
+            type: object
+        type: object

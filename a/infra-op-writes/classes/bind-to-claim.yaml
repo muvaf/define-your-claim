@@ -1,0 +1,98 @@
+# A CompositionDefinition defines what happens when an instance of a Crossplane
+# resource is created (or updated?). It's a little like a contemporary resource
+# class, but its inputs and outputs can be either cluster or namespace scoped
+# resources.
+apiVersion: crossplane.io/v1alpha1
+kind: CompositionDefinition
+metadata:
+  name: private-mysql-server
+  labels:
+    example: "true"
+spec:
+  # Reference to a ResourceDefinition. The ResourceDefinition must support the
+  # composite feature.
+  definitionRef:
+    name: mysqlclaims.database.example.org
+  resources:
+    - base:
+        apiVersion: azure.crossplane.io/v1alpha3
+        kind: ResourceGroup
+        metadata:
+        spec:
+          location: West US
+          providerRef:
+            name: example
+          reclaimPolicy: Delete
+      patch:
+        - fromFieldPath: "spec.region"
+          toFieldPath: "spec.forProvider.location"
+          transforms:
+            - type: map
+              map:
+                us-west: "West US"
+                us-east: "East US"
+    - base:
+        apiVersion: database.azure.crossplane.io/v1beta1
+        kind: MySQLServer
+        spec:
+          forProvider:
+            administratorLogin: myadmin
+            resourceGroupNameSelector:
+              matchComposite: true
+            location: West US
+            sslEnforcement: Disabled
+            version: "5.6"
+            sku:
+              tier: Basic
+              capacity: 1
+              family: Gen5
+            storageProfile:
+              storageMB: 20480
+          writeConnectionSecretToRef:
+            namespace: crossplane-system
+          providerRef:
+            name: example
+          reclaimPolicy: Delete
+      patch:
+        - fromFieldPath: "metadata.uid"
+          toFieldPath: "spec.writeConnectionSecretToRef.name"
+        - fromFieldPath: "spec.engineVersion"
+          toFieldPath: "spec.forProvider.version"
+        - fromFieldPath: "spec.storageGB"
+          toFieldPath: "spec.forProvider.storageMB"
+          transforms:
+            - type: math
+              math:
+                multiply: 1024
+        - fromFieldPath: "spec.region"
+          toFieldPath: "spec.forProvider.location"
+          transforms:
+            - type: map
+              map:
+                us-west: "West US"
+                us-east: "East US"
+      # Specifies how to map connection details from this primitive resource to
+      # its composite resource. Only supported if corresponding ResourceDefinition
+      # supports the connectable feature.
+      connectionDetails:
+        - name: username
+          fromConnectionSecretKey: username
+        - name: password
+          fromConnectionSecretKey: password
+        - name: endpoint
+          fromConnectionSecretKey: endpoint
+    - base:
+        apiVersion: database.azure.crossplane.io/v1alpha3
+        kind: MySQLServerVirtualNetworkRule
+        spec:
+          name: my-cool-vnet-rule
+          serverNameSelector:
+            matchComposite: true
+          resourceGroupNameSelector:
+            matchComposite: true
+          properties:
+            virtualNetworkSubnetIdRef:
+              name: sample-subnet
+          reclaimPolicy: Delete
+          providerRef:
+            name: azure-provider

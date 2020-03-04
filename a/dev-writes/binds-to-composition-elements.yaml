@@ -1,0 +1,46 @@
+# An example of the resource defined by the above ResourceDefinition. This
+# namespaced resource functions like one of today's resource claims.
+apiVersion: database.example.org/v1alpha1
+kind: MySQLInstance
+metadata:
+  namespace: default
+  name: sql
+spec:
+  # These fields were specified by the crdTemplateSpec.
+  engineVersion: "5.7"
+  storageGB: 10
+  region: us-west
+  # This field was injected by the connectable feature. It allows this resource
+  # to publish its connection details via a secret.
+  writeConnectionSecretToRef:
+    name: sql
+  # This field was injected by the composite feature. It allows compositions to
+  # be selected or specified like resource classes. This could also be used to
+  # implement something like the trait concept from OAM. In simple cases where
+  # there is only one compatible CompositionDefinition this can be omitted.
+  compositionSelector:
+    matchLabels:
+      example: "true"
+  # This field was injected by the composite feature. It allows a specific
+  # composition to be requested, and captures which composition was used after
+  # the fact.
+  compositionRef:
+    name: private-mysql-server
+  # This field was injected by the composite feature. It allows us to create a
+  # bidirectional relationship between a composite resource and the resources it
+  # composes. Owner references are insufficient for this purpose because they
+  # exist only from child to parent, making it very difficult to discover the
+  # children of a particular resource.
+  composed:
+    - ref:
+        apiVersion: azure.crossplane.io/v1alpha3
+        kind: ResourceGroup
+        name: default-sql-34jd2
+    - ref:
+        apiVersion: database.azure.crossplane.io/v1beta1
+        kind: MySQLServer
+        name: default-sql-3i3d1
+    - ref:
+        apiVersion: database.azure.crossplane.io/v1alpha3
+        kind: MySQLServerVirtualNetworkRule
+        name: default-sql-2mdus
