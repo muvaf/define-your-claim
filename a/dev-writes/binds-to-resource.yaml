@@ -1,7 +1,7 @@
-# The namespaced MySQLInstance's schema is unchanged in the static provisioning
+# The namespaced MySQLClaim's schema is unchanged in the static provisioning
 # scenario.
 apiVersion: database.example.org/v1alpha1
-kind: MySQLInstance
+kind: MySQLClaim
 metadata:
   namespace: default
   name: sql
@@ -11,7 +11,7 @@ spec:
   region: us-west
   writeConnectionSecretToRef:
     name: sql
-  # Instead of referencing a composition this MySQLInstance explicitly specifies
+  # Instead of referencing a composition this MySQLClaim explicitly specifies
   # that it composes an existing managed resource (which is itself a composite).
   # This is allowed as long as the specified SecureDatabase has no compositeRef.
   composed:

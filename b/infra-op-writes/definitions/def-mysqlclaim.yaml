@@ -1,0 +1,81 @@
+# Maybe ClaimDefinition(namespaced claims) and ResourceDefinition(cluster-scoped resource) would be separate so that we don't need features array.
+apiVersion: crossplane.io/v1alpha1
+kind: ClaimDefinition
+metadata:
+  name: mysqlclaims.database.example.org
+spec:
+  resources:
+    - identifier: resourcegroup
+      apiVersion: azure.crossplane.io/v1alpha3
+      kind: ResourceGroup
+      patch:
+        - fromFieldPath: "spec.providerRef.name"
+          toFieldPath: "spec.providerRef.name"
+        - fromFieldPath: "spec.location"
+          toFieldPath: "spec.forProvider.location"
+    - identifier: database
+      apiVersion: database.azure.crossplane.io/v1beta1
+      kind: MySQLServer
+      patch:
+        - fromFieldPath: "metadata.uid"
+          toFieldPath: "spec.writeConnectionSecretToRef.name"
+        - fromFieldPath: "spec.engineVersion"
+          toFieldPath: "spec.forProvider.version"
+        - fromFieldPath: "spec.storageGB"
+          toFieldPath: "spec.forProvider.storageMB"
+          transforms:
+            - type: math
+              math:
+                multiply: 1024
+        - fromFieldPath: "spec.region"
+          toFieldPath: "spec.forProvider.location"
+          transforms:
+            - type: map
+              map:
+                us-west: "West US"
+                us-east: "East US"
+      connectionDetails:
+        - name: username
+          fromConnectionSecretKey: username
+        - name: password
+          fromConnectionSecretKey: password
+        - name: endpoint
+          fromConnectionSecretKey: endpoint
+    - identifier: mysqlvnetrule
+      apiVersion: database.azure.crossplane.io/v1alpha3
+      kind: MySQLServerVirtualNetworkRule
+  crdRef:
+    name: mysqlclaims.database.example.org
+  # This template is used to create a CRD (if crdRef is unset). Only a single
+  # version is supported.
+  crdSpecTemplate:
+    group: database.example.org
+    version: v1alpha1
+    names:
+      kind: MySQLClaim
+      listKind: MySQLClaimList
+      plural: mysqlclaims
+      singular: mysqlclaim
+    scope: Namespaced
+    validation:
+      openAPIV3Schema:
+        properties:
+          apiVersion:
+            type: string
+          kind:
+            type: string
+          metadata:
+            type: object
+          spec:
+            properties:
+              engineVersion:
+                enum:
+                  - "5.6"
+                  - "5.7"
+                type: string
+              storageGb:
+                type: integer
+              region:
+                type: string
+            type: object
+        type: object

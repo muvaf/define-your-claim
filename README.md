@@ -52,35 +52,40 @@ https://gist.github.com/bassam/c2a5a00134768e0201533ac0ee3a57d0#gistcomment-3188
 This is the one that gained much consensus in the meeting. Although @muvaf stated his concerns about `ResourceDefinition`, much of the design is doable. I will not go into too much detail about this here since linked gist comment is already extensive.
 
 * Infra-operator will write two `ResourceDefinition.crossplane.io/v1alpha1`s to define CRDs:
-  * One for claim CRD generation: MySQLClaim Namespace-scoped CRD
-  * One for resource CRD generation: SecureDatabase Cluster-scoped CRD
+  * [One](a/infra-op-writes/definitions/def-mysqlclaim.yaml) for claim CRD generation: [MySQLClaim Namespace-scoped CRD](a/generated/mysqlclaim_crd.yaml)
+  * [One](a/infra-op-writes/definitions/def-securedatabase.yaml) for resource CRD generation: [SecureDatabase Cluster-scoped CRD](a/generated/securedatabase_crd.yaml)
 
 * Infra-operator will write `CompositionDefinition.crossplane.io/v1alpha1` to act as resource classes:
-  * One replica resource class: CompositionDefinition
-  * 3 replicas resource class: CompositionDefinition
+  * One resource class if you'd like to bind resources directly to claim: [CompositionDefinition](a/infra-op-writes/classes/bind-to-claim.yaml)
+  * One resource class if you'd like to bind resources to a resource, SecureDatabase: [CompositionDefinition](a/infra-op-writes/classes/bind-to-resource.yaml)
 
-Note that it's not necessary to write both. They can write only one of them and let the app dev bundle that.
+Note that you can also bind claim to resource through the same composition mechanism.
 
-* App dev will bundle one `MySQLClaim` resource in the app.
+* App dev will bundle one `MySQLClaim` resource in the app:
+  * In case you composed one `SecureDatabase` to bind to [`MySQLClaim`](a/dev-writes/binds-to-resource.yaml).
+  * In case you composed all resources to bind directly to [`MySQLClaim`](a/dev-writes/binds-to-composition-elements.yaml).
+  
+Note that app dev writes the same `MySQLClaim` but infra-op decides what it binds to.
 
 ### Solution B
 
 The main difference with Solution A is that here `ResourceDefinition` and `CompositionDefinition` is merged. The resulting object is used to generate two CRDs with full validation: `SecureDatabase` and `SecureDatabaseClass`
 
-* Infra-operator will write one `ResourceDefinition` to define CRDs:
-  * As resource class CRD: `SecureDatabaseClass`
-  * As resource CRD: `SecureDatabase`
+* Infra-operator will write one [`ResourceDefinition`](b/infra-op-writes/definitions/def-securedatabase.yaml) to define CRDs:
+  * CRD will be generated to be resource class: [`SecureDatabaseClass`](b/generated/securedatabaseclass_crd.yaml)
+  * CRD will be generated to be resource: [`SecureDatabase`](b/generated/securedatabase_crd.yaml)
 
 * Infra-operator will write one `ClaimDefinition` to define CRD:
-  * As claim: `MySQLClaim`
+  * CRD will be generated to be claim: [`MySQLClaim`](b/generated/mysqlclaim_crd.yaml)
 
 Note that it's not necessary to write both. They can write only one of them and let the app dev bundle that.
 
 * Infra-operator will write strongly typed resource classes:
-  * One replica resource class: `SecureDatabaseClass`
-  * 3 replicas resource class: `SecureDatabaseClass`
+  * One resource class if you'd like to bind resources directly to claim: [`SecureDatabaseClass`](b/infra-op-writes/classes/bind-to-claim.yaml)
+  * You cannot bind more than one resource to `MySQLClaim` in this solution. Though we can change that, I think that's a fair opinion for the system to have, i.e. classic PVC model preserved and we allow static provisioning just like today.
 
 * App dev will bundle one `MySQLClaim`.
+  * One `SecureDatabase` to bind to [`MySQLClaim`](b/dev-writes/binds-to-resource.yaml).
 
 ## Comparison
 
@@ -91,7 +96,7 @@ Note that it's not necessary to write both. They can write only one of them and 
 
 ### Solution B Advantages
 
-* Resulting CRDs are strong-typed, fully validated.
+* Resulting CRDs (SecureDatabase, SecureDatabaseClass and MySQLClaim) are strong-typed, fully validated.
 * Referencing other resources in the same composition is easier since direct identifiers are used during authoring.
 * Resource class writers are more constrained in the sense that you cannot put in a kind that was not specified in `ResourceDefinition`, hence there is no scenario where app dev wanted a cluster but got database.
 
@@ -100,4 +105,6 @@ Note that it's not necessary to write both. They can write only one of them and 
 
 The main difference between those solutions is where you define the bindings and connection details and that change what you can generate. I think if we alter it a bit more we can get best of both solutions. For example, when we talked about Solution B, @negz proposed that maybe `ResourceDefinition` and `ClaimDefinition` could expose the list of connection keys and resource classes would just match them.
 
-Maybe a mechanism that will allow the resource class writers override the defaults on the definition resources could help here for both connection keys and field bindings.
+Maybe a mechanism that will allow the resource class writers override the defaults on the definition resources to some extent could help here for both connection keys and field bindings.
+
+The other point is that Solution B enforces that claims can bind to one resource directly, like today. So, you cannot compose N resources to bind to the claim directly. So, there is a bit more difference between claim and resource kinds in Solution B, which is different than Solution B where the difference is only about the scope (namespace vs cluster).

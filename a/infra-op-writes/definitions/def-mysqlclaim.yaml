@@ -6,7 +6,7 @@
 apiVersion: crossplane.io/v1alpha1
 kind: ResourceDefinition
 metadata:
-  name: mysqlinstances.database.example.org
+  name: mysqlclaims.database.example.org
 spec:
   # Features of this Crossplane resource. A feature flags this kind of resource
   # as having support for a particular feature. This may involve injecting the
@@ -23,17 +23,17 @@ spec:
   # author may specify an existing CRD. If they do not a CRD will be created and
   # set for them.
   crdRef:
-    name: mysqlinstances.database.example.org
+    name: mysqlclaims.database.example.org
   # This template is used to create a CRD (if crdRef is unset). Only a single
   # version is supported.
   crdSpecTemplate:
     group: database.example.org
     version: v1alpha1
     names:
-      kind: MySQLInstance
-      listKind: MySQLInstanceList
-      plural: mysqlinstances
-      singular: mysqlinstance
+      kind: MySQLClaim
+      listKind: MySQLClaimList
+      plural: mysqlclaims
+      singular: mysqlclaim
     scope: Namespaced
     validation:
       openAPIV3Schema:

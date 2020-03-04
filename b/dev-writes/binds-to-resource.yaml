@@ -1,0 +1,22 @@
+# The namespaced MySQLClaim's schema is unchanged in the static provisioning
+# scenario.
+apiVersion: database.example.org/v1alpha1
+kind: MySQLClaim
+metadata:
+  namespace: default
+  name: sql
+spec:
+  engineVersion: "5.7"
+  storageGB: 10
+  region: us-west
+  writeConnectionSecretToRef:
+    name: sql
+  # Just like today as if SecureDatabase was native Crossplane managed resource.
+  classRef:
+    apiVersion: azure.example.org/v1alpha1
+    kind: SecureDatabaseClass
+    name: private-mysql-server
+  resourceRef:
+    apiVersion: azure.example.org/v1alpha1
+    kind: SecureDatabase
+    name: my-secure-database

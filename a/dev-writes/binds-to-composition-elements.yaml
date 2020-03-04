@@ -1,7 +1,7 @@
 # An example of the resource defined by the above ResourceDefinition. This
 # namespaced resource functions like one of today's resource claims.
 apiVersion: database.example.org/v1alpha1
-kind: MySQLInstance
+kind: MySQLClaim
 metadata:
   namespace: default
   name: sql

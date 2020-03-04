@@ -1,0 +1,54 @@
+# A MySQLClaimClass CRD is generated with field names given in `ResourceDefinition`.spec.resources[*].identifier
+apiVersion: azure.example.io/v1alpha1
+kind: SecureDatabaseClass
+metadata:
+  name: private-mysql-server
+  labels:
+    example: "true"
+spec:
+  resouregroup:
+    apiVersion: azure.crossplane.io/v1alpha3
+    kind: ResourceGroup
+    metadata:
+    spec:
+      location: West US
+      providerRef:
+        name: example
+      reclaimPolicy: Delete
+  database:
+    apiVersion: database.azure.crossplane.io/v1beta1
+    kind: MySQLServer
+    spec:
+      forProvider:
+        administratorLogin: myadmin
+        resourceGroupNameSelector:
+          inCompositeRef: resourcegroup # direct identifier, will be converted to label selector once a SecureDatabase is created.
+        location: West US
+        sslEnforcement: Disabled
+        version: "5.6"
+        sku:
+          tier: Basic
+          capacity: 1
+          family: Gen5
+        storageProfile:
+          storageMB: 20480
+      writeConnectionSecretToRef:
+        namespace: crossplane-system
+      providerRef:
+        name: example
+      reclaimPolicy: Delete
+  mysqlvnetrule:
+    apiVersion: database.azure.crossplane.io/v1alpha3
+    kind: MySQLServerVirtualNetworkRule
+    spec:
+      name: my-cool-vnet-rule
+      serverNameSelector:
+        inCompositeRef: database # direct identifier, will be converted to label selector once a SecureDatabase is created.
+      resourceGroupNameSelector:
+        inCompositeRef: resourcegroup # direct identifier, will be converted to label selector once a SecureDatabase is created.
+      properties:
+        virtualNetworkSubnetIdRef:
+          name: sample-subnet
+      reclaimPolicy: Delete
+      providerRef:
+        name: azure-provider
