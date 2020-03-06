@@ -4,46 +4,13 @@ kind: ClaimDefinition
 metadata:
   name: mysqlclaims.database.example.org
 spec:
-  resources:
-    - identifier: resourcegroup
-      apiVersion: azure.crossplane.io/v1alpha3
-      kind: ResourceGroup
-      patch:
-        - fromFieldPath: "spec.providerRef.name"
-          toFieldPath: "spec.providerRef.name"
-        - fromFieldPath: "spec.location"
-          toFieldPath: "spec.forProvider.location"
-    - identifier: database
-      apiVersion: database.azure.crossplane.io/v1beta1
-      kind: MySQLServer
-      patch:
-        - fromFieldPath: "metadata.uid"
-          toFieldPath: "spec.writeConnectionSecretToRef.name"
-        - fromFieldPath: "spec.engineVersion"
-          toFieldPath: "spec.forProvider.version"
-        - fromFieldPath: "spec.storageGB"
-          toFieldPath: "spec.forProvider.storageMB"
-          transforms:
-            - type: math
-              math:
-                multiply: 1024
-        - fromFieldPath: "spec.region"
-          toFieldPath: "spec.forProvider.location"
-          transforms:
-            - type: map
-              map:
-                us-west: "West US"
-                us-east: "East US"
-      connectionDetails:
-        - name: username
-          fromConnectionSecretKey: username
-        - name: password
-          fromConnectionSecretKey: password
-        - name: endpoint
-          fromConnectionSecretKey: endpoint
-    - identifier: mysqlvnetrule
-      apiVersion: database.azure.crossplane.io/v1alpha3
-      kind: MySQLServerVirtualNetworkRule
+  # these will be satisfied by the resource who'd like to bind to the claim.
+  # no other keys will be propagated from the managed resource's secret.
+  # app dev will know for sure that these are the correct name of the keys.
+  connectionSecretKeys:
+  - username
+  - password
+  - endpoint
   crdRef:
     name: mysqlclaims.database.example.org
   # This template is used to create a CRD (if crdRef is unset). Only a single

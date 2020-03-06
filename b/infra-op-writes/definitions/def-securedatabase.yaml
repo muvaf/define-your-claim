@@ -52,9 +52,7 @@ spec:
           toFieldPath: "spec.forProvider.storageMB"
         - fromFieldPath: "spec.location"
           toFieldPath: "spec.forProvider.location"
-      # Specifies how to map connection details from this primitive resource to
-      # its composite resource. Only supported if corresponding ResourceDefinition
-      # supports the connectable feature.
+      # Any resource can fill the keys with their connection secret, if there is one.
       connectionDetails:
         - name: username
           fromConnectionSecretKey: username
@@ -82,6 +80,17 @@ spec:
           toFieldPath: "spec.providerRef.name"
         - fromFieldPath: "spec.virtualNetworkSubnetIdRef.name"
           toFieldPath: "spec.properties.virtualNetworkSubnetIdRef.name"
+  # fields whose value this will take, continuously sync.
+  # this is useful to reuse the same claim by different resource definitions.
+  # Maybe do this in patch fields above? 3 fields: fromClaim, onComposition, toResource?
+  claimFieldBindings:
+    - fromFieldPath: "spec.engineVersion" # exists in the claim.
+      toFieldPath: "spec.version" # exists in the SecureDatabase resource.
+      transforms:
+        - type: math
+          math:
+            multiply: 1024
+        ...
   crdRef:
     name: securedatabases.azure.example.org
   crdSpecTemplate:
