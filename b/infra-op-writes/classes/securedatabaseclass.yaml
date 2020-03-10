@@ -6,10 +6,7 @@
 # is unset in the claim even though its binding was defined in ResourceDefinition.
 #
 # There are fields like `providerRef`, `writeConnectionSecretToRef` in each spec
-# object of the managed resource. Controller will override them via the ones given
-# in SecureDatabaseClass.spec.providerRef/reclaimPolicy etc. We can reject creation
-# of SecureDatabaseClass if individual resources includes those fields or simply delete those
-# fields.
+# object of the managed resource. Controller will not do anything specific for them.
 apiVersion: azure.example.io/v1alpha1
 kind: SecureDatabaseClass
 metadata:
@@ -17,11 +14,6 @@ metadata:
   labels:
     example: "true"
 spec:
-  writeConnectionSecretToRef:
-    namespace: crossplane-system
-  providerRef:
-    name: example
-  reclaimPolicy: Delete
   resouregroup:
 #    Author can skip apiVersion and kind since we already know it and can late initialize the fields after the creation.
 #    apiVersion: azure.crossplane.io/v1alpha3
@@ -45,6 +37,11 @@ spec:
           family: Gen5
         storageProfile:
           storageMB: 20480
+    writeConnectionSecretToRef:
+      namespace: crossplane-system
+    providerRef:
+      name: example
+    reclaimPolicy: Delete
   mysqlvnetrule:
     apiVersion: database.azure.crossplane.io/v1alpha3
     kind: MySQLServerVirtualNetworkRule
@@ -57,3 +54,8 @@ spec:
       properties:
         virtualNetworkSubnetIdRef:
           name: sample-subnet
+    writeConnectionSecretToRef:
+      namespace: crossplane-system
+    providerRef:
+      name: example
+    reclaimPolicy: Delete
