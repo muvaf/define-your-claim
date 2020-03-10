@@ -1,4 +1,15 @@
-# A MySQLClaimClass CRD is generated with field names given in `ResourceDefinition`.spec.resources[*].identifier
+# A SecureDatabaseClass CRD is generated with field names given in `ResourceDefinition`.spec.resources[*].identifier
+# Infra operators will write instances of this SecureDatabaseClass for different
+# regions/clouds/teams etc. Each spec field is one resource.
+#
+# Infra-operators can define default values for the fields here in case the field
+# is unset in the claim even though its binding was defined in ResourceDefinition.
+#
+# There are fields like `providerRef`, `writeConnectionSecretToRef` in each spec
+# object of the managed resource. Controller will override them via the ones given
+# in SecureDatabaseClass.spec.providerRef/reclaimPolicy etc. We can reject creation
+# of SecureDatabaseClass if individual resources includes those fields or simply delete those
+# fields.
 apiVersion: azure.example.io/v1alpha1
 kind: SecureDatabaseClass
 metadata:
@@ -6,15 +17,17 @@ metadata:
   labels:
     example: "true"
 spec:
+  writeConnectionSecretToRef:
+    namespace: crossplane-system
+  providerRef:
+    name: example
+  reclaimPolicy: Delete
   resouregroup:
-    apiVersion: azure.crossplane.io/v1alpha3
-    kind: ResourceGroup
-    metadata:
+#    Author can skip apiVersion and kind since we already know it and can late initialize the fields after the creation.
+#    apiVersion: azure.crossplane.io/v1alpha3
+#    kind: ResourceGroup
     spec:
       location: West US
-      providerRef:
-        name: example
-      reclaimPolicy: Delete
   database:
     apiVersion: database.azure.crossplane.io/v1beta1
     kind: MySQLServer
@@ -32,11 +45,6 @@ spec:
           family: Gen5
         storageProfile:
           storageMB: 20480
-      writeConnectionSecretToRef:
-        namespace: crossplane-system
-      providerRef:
-        name: example
-      reclaimPolicy: Delete
   mysqlvnetrule:
     apiVersion: database.azure.crossplane.io/v1alpha3
     kind: MySQLServerVirtualNetworkRule
@@ -49,6 +57,3 @@ spec:
       properties:
         virtualNetworkSubnetIdRef:
           name: sample-subnet
-      reclaimPolicy: Delete
-      providerRef:
-        name: azure-provider

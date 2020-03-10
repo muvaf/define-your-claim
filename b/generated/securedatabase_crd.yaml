@@ -22,12 +22,7 @@ spec:
   validation:
     openAPIV3Schema:
       properties:
-        resourcegroup:
-          < Full Azure ResourceGroup CRD validation >
-        mysqlserver:
-          < Full Azure MySQLServer CRD validation >
-        vnetrule:
-          < Full MySQLServerVirtualNetworkRule CRD validation >
+        <An array that represents the list of bound objects.>
 status:
   acceptedNames:
     kind: ""

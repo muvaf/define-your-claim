@@ -1,140 +1,60 @@
-# A cluster scoped "SecureDatabase" composite managed resource.
+# This ResourceDefinition will be used to generate two CRDs:
+# - SecureDatabase: Spec will not contain actual resource parameters. Only list
+#   of the references to the provisioned resources and the necessary fields for
+#   managed resource machinery, such as providerRef, claimRef etc.
+# - SecureDatabaseClass: Spec will have fields named with `identifier` of each
+#   resources below and their OpenAPIV3 validation schemas will be fetched from api-server.
+#
+# A controller will be spinned up to create the resources and a SecureDatabase
+# object to refer to them. SecureDatabase will bind to MySQLClaim resource like
+# any other managed resource.
 apiVersion: crossplane.io/v1alpha1
 kind: ResourceDefinition
 metadata:
   name: securedatabases.azure.example.org
 spec:
+  crdRef:
+    # Assumes that a CRD with this name exists, otherwise will fail.
+    name: mysqlclaims.database.example.org
   resources:
+    # No actual config value is given here. Actual parameters will be given in
+    # SecureDatabaseClass instances.
+    #
+    # Patches show the bindings from MySQLClaim to the actual resource
+    # (ResourceGroup, MySQLServer etc.) directly, not using SecureDatabase as an
+    # intermediary resource for field value propagation.
+    #
+    # If `fromFieldPath` refers to a field that doesn't exist in MySQLClaim, the
+    # creation of this ResourceDefinition should fail.
     - identifier: resourcegroup
       apiVersion: azure.crossplane.io/v1alpha3
       kind: ResourceGroup
-      metadata:
-      spec:
-        location: West US
-        providerRef:
-          name: example
-        reclaimPolicy: Delete
       patch:
-        - fromFieldPath: "spec.providerRef.name"
-          toFieldPath: "spec.providerRef.name"
-        - fromFieldPath: "spec.location"
+        - fromFieldPath: "spec.region"
           toFieldPath: "spec.forProvider.location"
+          transforms:
+            - type: map
+              map:
+                us-west: "West US"
+                us-east: "East US"
     - identifier: mysqlserver
       apiVersion: database.azure.crossplane.io/v1beta1
       kind: MySQLServer
-      spec:
-        forProvider:
-          administratorLogin: myadmin
-          resourceGroupNameSelector:
-            matchComposite: true
-          location: West US
-          sslEnforcement: Disabled
-          version: "5.6"
-          sku:
-            tier: Basic
-            capacity: 1
-            family: Gen5
-          storageProfile:
-            storageMB: 20480
-        writeConnectionSecretToRef:
-          namespace: crossplane-system
-        providerRef:
-          name: example
-        reclaimPolicy: Delete
       patch:
-        - fromFieldPath: "spec.providerRef.name"
-          toFieldPath: "spec.providerRef.name"
-        - fromFieldPath: "metadata.uid"
-          toFieldPath: "spec.writeConnectionSecretToRef.name"
-        - fromFieldPath: "spec.version"
-          toFieldPath: "spec.forProvider.version"
-        - fromFieldPath: "spec.storageMB"
+        - fromFieldPath: "spec.storageGB"
           toFieldPath: "spec.forProvider.storageMB"
-        - fromFieldPath: "spec.location"
-          toFieldPath: "spec.forProvider.location"
+          transforms:
+            - type: math
+              math:
+                multiply: 1024
       # Any resource can fill the keys with their connection secret, if there is one.
-      connectionDetails:
-        - name: username
-          fromConnectionSecretKey: username
-        - name: password
-          fromConnectionSecretKey: password
-        - name: endpoint
-          fromConnectionSecretKey: endpoint
+      connectionSecretKeys:
+        - to: username # in claim's secret.
+          from: username # in MySQLServer's secret.
+        - to: password
+          from: password
+        - to: endpoint
+          from: endpoint
     - identifier: vnetrule
       apiVersion: database.azure.crossplane.io/v1alpha3
       kind: MySQLServerVirtualNetworkRule
-      spec:
-        name: my-cool-vnet-rule
-        serverNameSelector:
-          matchComposite: true
-        resourceGroupNameSelector:
-          matchComposite: true
-        properties:
-          virtualNetworkSubnetIdRef:
-            name: sample-subnet
-        reclaimPolicy: Delete
-        providerRef:
-          name: azure-provider
-      patch:
-        - fromFieldPath: "spec.providerRef.name"
-          toFieldPath: "spec.providerRef.name"
-        - fromFieldPath: "spec.virtualNetworkSubnetIdRef.name"
-          toFieldPath: "spec.properties.virtualNetworkSubnetIdRef.name"
-  # fields whose value this will take, continuously sync.
-  # this is useful to reuse the same claim by different resource definitions.
-  # Maybe do this in patch fields above? 3 fields: fromClaim, onComposition, toResource?
-  claimFieldBindings:
-    - fromFieldPath: "spec.engineVersion" # exists in the claim.
-      toFieldPath: "spec.version" # exists in the SecureDatabase resource.
-      transforms:
-        - type: math
-          math:
-            multiply: 1024
-        ...
-  crdRef:
-    name: securedatabases.azure.example.org
-  crdSpecTemplate:
-    group: azure.example.org
-    version: v1alpha1
-    names:
-      kind: SecureDatabase
-      listKind: SecureDatabaseList
-      plural: securedatabases
-      singular: securedatabase
-    scope: Cluster
-    validation:
-      openAPIV3Schema:
-        properties:
-          administratorLogin:
-            type: string
-          location:
-            type: string
-          sslEnforcement:
-            type: string
-          version:
-            type: string
-          sku:
-            properties:
-              tier:
-                type: string
-              capacity:
-                type: integer
-              family:
-                type: string
-            type: object
-          storageProfile:
-            properties:
-              storageMB:
-                type: integer
-            type: object
-          virtualNetworkSubnetIdRef:
-            properties:
-              name:
-                type: string
-            type: object
-          providerRef:
-            properties:
-              name:
-                type: string
-            type: object
-        type: object
