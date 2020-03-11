@@ -21,7 +21,8 @@ spec:
       storage: true
   validation:
     openAPIV3Schema:
-      properties:
+      properties: # No actual managed resource forProvider parameters here.
+        < classRef >
         <An array that represents the list of bound objects.>
 status:
   acceptedNames:
