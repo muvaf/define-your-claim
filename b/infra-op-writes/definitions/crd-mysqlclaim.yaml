@@ -19,9 +19,7 @@ spec:
   - username
   - password
   - endpoint
-  crdRef:
-    name: mysqlclaims.database.example.org
-  # This template is used to create a CRD (if crdRef is unset). Only a single
+  # This template is used to create a CRD. Only a single
   # version is supported.
   crdSpecTemplate:
     group: database.example.org
