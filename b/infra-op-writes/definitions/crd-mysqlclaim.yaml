@@ -1,16 +1,16 @@
-# ClaimDefinition is the single source of truth for both app developers who will
+# InstanceDefinition is the single source of truth for both app developers who will
 # bundle MySQLInstance or KubernetesCluster with their app and infra operators
 # who will satisfy app's needs. Both have to adhere to this one field set and
 # connection secret key set.
 #
 # This is one of the key points of this design. I'd like both app-dev and infra-op
 # to have a consensus on the interface that they are communicating through.
-# I imagine there will be a set of ClaimDefinition that whole organization uses
+# I imagine there will be a set of InstanceDefinition that whole organization uses
 # and its instances (MySQLClaim) is bundled with the apps they ship.
 apiVersion: crossplane.io/v1alpha1
-kind: ClaimDefinition
+kind: InstanceDefinition
 metadata:
-  name: mysqlclaims.database.example.org
+  name: MySQLInstances.database.example.org
 spec:
   # these will be satisfied by the resource who'd like to bind to the claim.
   # no other keys will be propagated from the managed resource's secret.
@@ -25,10 +25,10 @@ spec:
     group: database.example.org
     version: v1alpha1
     names:
-      kind: MySQLClaim
-      listKind: MySQLClaimList
-      plural: mysqlclaims
-      singular: mysqlclaim
+      kind: MySQLInstance
+      listKind: mysqlinstanceList
+      plural: mysqlinstances
+      singular: mysqlinstance
     # Scope can be Cluster or Namespaced. No restriction.
     scope: Namespaced
     validation:

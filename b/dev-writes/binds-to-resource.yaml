@@ -17,6 +17,12 @@ spec:
     kind: SecureDatabaseClass
     name: private-mysql-server
   resourceRef:
-    apiVersion: azure.example.org/v1alpha1
-    kind: SecureDatabase
-    name: my-secure-database
+  - apiVersion: azure.example.org/v1alpha1
+    kind: ResourceGroup
+    name: res-group
+  - apiVersion: azure.example.org/v1alpha1
+      kind: SQLServer
+      name: sql-server
+  - apiVersion: azure.example.org/v1alpha1
+      kind: VNetRule
+      name: vnet-rule

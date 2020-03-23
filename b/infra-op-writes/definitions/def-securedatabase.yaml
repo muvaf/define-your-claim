@@ -1,21 +1,17 @@
-# This ResourceDefinition will be used to generate two CRDs:
-# - SecureDatabase: Spec will not contain actual resource parameters. Only list
-#   of the references to the provisioned resources and the necessary fields for
-#   managed resource machinery, such as providerRef, claimRef etc.
+# This ClassDefinition will be used to generate two CRDs:
 # - SecureDatabaseClass: Spec will have fields named with `identifier` of each
 #   resources below and their OpenAPIV3 validation schemas will be fetched from api-server.
 #
-# A controller will be spinned up to create the resources and a SecureDatabase
-# object to refer to them. SecureDatabase will bind to MySQLClaim resource like
-# any other managed resource.
+# A controller will be spinned up to create the resources bind each of them to
+# MySQLClaim directly.
 apiVersion: crossplane.io/v1alpha1
-kind: ResourceDefinition
+kind: ClassDefinition
 metadata:
-  name: securedatabases.azure.example.org
+  name: securedatabaseclasses.azure.example.org
 spec:
   crdRef:
     # Assumes that a CRD with this name exists, otherwise will fail.
-    name: mysqlclaims.database.example.org
+    name: mysqlinstances.database.example.org
   resources:
     # No actual config value is given here. Actual parameters will be given in
     # SecureDatabaseClass instances.
