@@ -1,3 +1,5 @@
+You can look at folder **b** for YAMLs of this design.
+
 ![Architecture diagram](compositeclasses.png)
 
 
