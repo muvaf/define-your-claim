@@ -1,4 +1,4 @@
-# A SecureDatabaseClass CRD is generated with field names given in `ResourceDefinition`.spec.resources[*].identifier
+# A SecureDatabaseClass CRD is generated with field names given in `ClassDefinition`.spec.resources[*].identifier
 # Infra operators will write instances of this SecureDatabaseClass for different
 # regions/clouds/teams etc. Each spec field is one resource.
 #
